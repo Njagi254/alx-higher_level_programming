@@ -3,9 +3,14 @@
 
 class Rectangle:
     """
-    A class that defines a rectangle
+    A class used to represent a Rectangle
 
-    Attributes:
+    Attributes
+    ----------
+    None
+
+    Methods
+    -------
     None
     """
     pass
