@@ -1,113 +1,129 @@
 #!/usr/bin/python3
-"""``Base`` class module"""
-
+"""Base geometry class"""
 import json
-import os
+import csv
 
 
 class Base:
-    """Base of all classes in this project"""
-
+    """Base geometry class"""
     __nb_objects = 0
 
-    def __init__(self, _id=None):
-        """Sets private attributes and id fields
-            Args:
-                _id (int): A integer
-        """
-        if _id is None:
+    def __init__(self, id=None):
+        if id is None:
             Base.__nb_objects += 1
             self.id = Base.__nb_objects
         else:
-            self.id = _id
+            self.id = id
 
-    @staticmethod
     def to_json_string(list_dictionaries):
-        """Returns the JSON string representation of list_dictionaries"""
-        if list_dictionaries is None:
-            list_dictionaries = []
-        elif type(list_dictionaries) is not list:
-            raise TypeError("list_dictionaries must be a list of dictionaries")
-
-        for d in list_dictionaries:
-            if type(d) is not dict:
-                msg = "list_dictionaries must be a list of dictionaries"
-                raise TypeError(msg)
-
+        """Returns a json string made out of the dictionaries."""
+        if list_dictionaries is None or len(list_dictionaries) == 0:
+            return "[]"
         return json.dumps(list_dictionaries)
 
-    @staticmethod
     def from_json_string(json_string):
-        """Returns the list of the JSON string representation"""
-        if json_string is None:
+        """Returns dictionary representations of geometry objects from JSON"""
+        if json_string is None or len(json_string) == 0:
             return []
         return json.loads(json_string)
 
     @classmethod
-    def save_to_file(cls, list_objs):
-        """Writes the JSON string representation of list_obj"""
-        if list_objs is None:
-            list_objs = []
+    def create(cls, **dictionary):
+        """Creates a geometry object from a dictionary"""
+        from .rectangle import Rectangle
+        from .square import Square
+        if cls is Rectangle:
+            newrect = Rectangle(1, 1, 0, 0, 0)
+            newrect.update(**dictionary)
+            return newrect
+        elif cls is Square:
+            newsquare = Square(1, 0, 0, 0)
+            newsquare.update(**dictionary)
+            return newsquare
 
-        filename = "{}.json".format(cls.__name__)
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(cls.to_json_string([o.to_dictionary() for o in list_objs]))
+    @classmethod
+    def save_to_file(cls, list_objs):
+        from .rectangle import Rectangle
+        from .square import Square
+        listcpy = list_objs.copy()
+        for idx in range(len(listcpy)):
+            listcpy[idx] = listcpy[idx].to_dictionary()
+        if cls is Rectangle:
+            with open("Rectangle.json", "w") as f:
+                f.write(Base.to_json_string(listcpy))
+        elif cls is Square:
+            with open("Square.json", "w") as f:
+                f.write(Base.to_json_string(listcpy))
 
     @classmethod
     def load_from_file(cls):
-        """Returns a list of instances"""
-        filename = "{}.json".format(cls.__name__)
-
-        if not os.path.exists(filename):
-            return []
-
-        ret = []
-        with open(filename, "r", encoding="utf-8") as f:
-            list_dicts = cls.from_json_string(f.read())
-            ret = [cls.create(**d) for d in list_dicts]
-        return ret
+        from .rectangle import Rectangle
+        from .square import Square
+        if cls is Rectangle:
+            with open("Rectangle.json", "r") as f:
+                retlist = Base.from_json_string(f.read())
+                if retlist == "":
+                    return []
+                for idx in range(len(retlist)):
+                    retlist[idx] = Rectangle.create(**retlist[idx])
+                return retlist
+        elif cls is Square:
+            with open("Square.json", "r") as f:
+                retlist = Base.from_json_string(f.read())
+                if retlist == "":
+                    return []
+                for idx in range(len(retlist)):
+                    retlist[idx] = Square.create(**retlist[idx])
+                return retlist
 
     @classmethod
     def save_to_file_csv(cls, list_objs):
-        """Serializes to csv a list of instances"""
-        if list_objs is None:
-            list_objs = []
-
-        filename = "{}.csv".format(cls.__name__)
-        attrs = ('id', 'size', 'width', 'height', 'x', 'y')
-        with open(filename, "w", encoding="utf-8") as f:
-            for o in list_objs:
-                d = o.to_dictionary()
-                t = []
-                for attr in attrs:
-                    if attr not in d:
-                        continue
-                    t.append(str(d.get(attr)))
-                f.write(",".join(t))
-                f.write("\n")
+        from .rectangle import Rectangle
+        from .square import Square
+        listcpy = list_objs.copy()
+        for idx in range(len(listcpy)):
+            listcpy[idx] = listcpy[idx].to_dictionary()
+        if cls is Rectangle:
+            with open("Rectangle.csv", "w") as f:
+                csvwriter = csv.writer(f)
+                for dicty in listcpy:
+                    newlist = []
+                    newlist.append(dicty["id"])
+                    newlist.append(dicty["width"])
+                    newlist.append(dicty["height"])
+                    newlist.append(dicty["x"])
+                    newlist.append(dicty["y"])
+                    csvwriter.writerow(newlist)
+        if cls is Square:
+            with open("Square.csv", "w") as f:
+                csvwriter = csv.writer(f)
+                for dicty in listcpy:
+                    newlist = []
+                    newlist.append(dicty["id"])
+                    newlist.append(dicty["size"])
+                    newlist.append(dicty["x"])
+                    newlist.append(dicty["y"])
+                    csvwriter.writerow(newlist)
 
     @classmethod
     def load_from_file_csv(cls):
-        """deserializes CSV"""
-        filename = "{}.csv".format(cls.__name__)
-
-        if not os.path.exists(filename):
-            return []
-
-        list_objs = []
-        with open(filename, "r", encoding="utf-8") as f:
-            for line in f:
-                arguments = line[:-1].split(",")
-                o = cls(1, 1)
-                o.update(*[int(x) for x in arguments])
-                list_objs.append(o)
-        return list_objs
-
-    @classmethod
-    def create(cls, **dictionary):
-        """Returns an instance with all attributes already set"""
-        instance = cls(1, 1)
-        instance.x = 0
-        instance.y = 0
-        instance.update(**dictionary)
-        return instance
+        from .rectangle import Rectangle
+        from .square import Square
+        if cls is Rectangle:
+            with open("Rectangle.csv", "r") as f:
+                csvreader = csv.reader(f)
+                retlist = []
+                for row in csvreader:
+                    newrect = Rectangle(int(row[1]), int(row[2]), int(row[3]),
+                                        int(row[4]), row[0])
+                    retlist.append(newrect)
+                return retlist
+        elif cls is Square:
+            with open("Square.csv", "r") as f:
+                csvreader = csv.reader(f)
+                retlist = []
+                for row in csvreader:
+                    newsquare = Square(int(row[1]), int(row[2]),
+                                       int(row[3]), row[0])
+                    retlist.append(newsquare)
+                return retlist
