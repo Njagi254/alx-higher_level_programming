@@ -1,3 +1,3 @@
 #!/bin/bash
-# takes in a URL, sends a request to that URL, displays the size of the body of the response
+# Script that takes a URL, sends a GET request to it, and displays the size of the response body
 curl -sI GET "$1" | grep -i "Content-Length" | cut -d " " -f2
