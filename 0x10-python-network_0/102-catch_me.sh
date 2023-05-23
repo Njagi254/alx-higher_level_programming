@@ -1,3 +1,3 @@
 #!/bin/bash
-# Makes a request to 0.0.0.0:5000/catch_me that gets the message "You got me
-curl -X GET -H "origin: HolbertonSchool" 0.0.0.0:5000/catch_me -s | grep -o 'You got me!'
+# Makes a request to 0.0.0.0:5000/catch_me that gets the message "You got me!".
+curl -s -L  -X PUT  -H 'Origin: School' localhost:5000/catch_me_3
