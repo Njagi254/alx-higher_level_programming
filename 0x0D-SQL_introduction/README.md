@@ -1,1 +1,1 @@
-Readme files for sql
+readme file for SQL intro project
